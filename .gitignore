@@ -3,3 +3,5 @@ venv
 best*
 .ipynb_checkpoints
 .DS_Store
+__pycache__
+*.png
