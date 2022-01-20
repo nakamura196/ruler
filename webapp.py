@@ -60,26 +60,37 @@ def predict():
         horizontal = isHorizontal()
         otsu()
 
+        print("otsu ended")
+
         # 細線化
         skelton(showFlag)
+
+        print("skelton ended")
 
         # 直線の検出
         x, y = hlsd(horizontal, showFlag)
 
+        print("さいせんか ended")
+
         # 極大値の表示
         arg_r_max = arg_r(x, y, False)
-        check(x, horizontal, arg_r_max, showFlag)
+        # check(x, horizontal, arg_r_max, showFlag)
         value = output(x, arg_r_max, horizontal)
+
+        print("base ended")
 
         if showFlag:
             from IPython.display import Image,display_jpeg
             display_jpeg(Image("output.jpg"))
         # print("1ピクセルあたりのサイズ: {} mm".format(value))
+        
         ratio = value["pixelPerMM"]
-        ruler_w = int(value["width"] / ratio)
-        ruler_h = int(value["height"] / ratio)
+        # ruler_w = int(value["width"] / ratio)
+        # ruler_h = int(value["height"] / ratio)
         input_image_w = int(org_w / ratio)
         input_image_h = int(org_h / ratio)
+        '''
+        '''
         # print("1mmあたりのピクセル数: {} pixes".format(ratio))
         # print("検出した定規画像の実サイズ: {} mm x {} mm".format(ruler_w, ruler_h))
         # print("入力画像の実サイズ: {} mm x {} mm".format(input_image_w, input_image_h))
@@ -87,7 +98,7 @@ def predict():
     result = {
         "success" : 1,
         "pixelPerMM": value["pixelPerMM"],
-        "input_image": [input_image_w, input_image_h]
+        "input": [input_image_w, input_image_h]
     }
 
     if type == "iiif":
