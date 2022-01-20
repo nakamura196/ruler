@@ -21,7 +21,7 @@ import statistics
 import matplotlib.pyplot as plt
 
 
-def detect(show=True):
+def detect(model, show=True):
 
     filename = "tmp.jpg"
 
@@ -45,8 +45,7 @@ def detect(show=True):
         r2 = image_size / ll
         resized = resized.resize((int(w * r2), int(h * r2)))
 
-    # ロード
-    model = torch.hub.load('ultralytics/yolov5', 'custom', path='./best.pt') # .autoshape()  # force_reload = recache latest code
+    
 
     results = model(resized, size=yolo_input_size)
 
@@ -342,5 +341,7 @@ def resize(url, input_image_w, input_image_h):
   full_height =  input_image_h * (full_image_height / input_image_height)
 
   print("（追加）フル画像の実サイズ: {} mm x {} mm".format(int(full_width), int(full_height)))
+
+  return [int(full_width), int(full_height)]
 
 # resize(url)

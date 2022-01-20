@@ -8,12 +8,15 @@ parser = argparse.ArgumentParser(description='このプログラムの説明（�
 
 # 3. parser.add_argumentで受け取る引数を追加していく
 parser.add_argument('url', help='この引数の説明（なくてもよい）')
-parser.add_argument('type', help='この引数の説明（なくてもよい）')
+parser.add_argument('-t', '--type', default="url", help='この引数の説明（なくてもよい）')
+parser.add_argument('-s', '--show', default=False, type=bool, help='この引数の説明（なくてもよい）')
+
 
 args = parser.parse_args()    # 4. 引数を解析
 
 url = args.url
 type = args.type
+showFlag = args.show
 
 ####
 
@@ -60,7 +63,8 @@ if r.status_code == 200:
     with open(filename, 'wb') as f:
         f.write(r.content)
 
-# display_jpeg(Image(filename))
+if showFlag:
+    display_jpeg(Image(filename))
 
 img = cv2.imread(filename)
 org_w = img.shape[1]
