@@ -41,7 +41,8 @@ else:
 
   # 極大値の表示
   arg_r_max = arg_r(x, y, False)
-  check(x, horizontal, arg_r_max, showFlag)
+  if showFlag:
+    check(x, horizontal, arg_r_max, showFlag)
   value = output(x, arg_r_max, horizontal)
 
   if showFlag:

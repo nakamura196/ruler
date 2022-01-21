@@ -29,16 +29,28 @@ def predict():
     if request.method == "GET":
         url = request.args.get('url', '')
 
+    if url == "":
+        return {
+            "success" : 0,
+            "msg" : "url"
+        }
+
     type = request.args.get('type', 'url')
 
     filename = "tmp.jpg"
     # !wget -O $filename $url
-
-    # 超シンプルな画像保存
-    r = requests.get(url)
-    if r.status_code == 200:
-        with open(filename, 'wb') as f:
-            f.write(r.content)
+    
+    try:
+        # 超シンプルな画像保存
+        r = requests.get(url)
+        if r.status_code == 200:
+            with open(filename, 'wb') as f:
+                f.write(r.content)
+    except Exception as e:
+        return {
+            "success" : 0,
+            "msg" : str(e)
+        }
 
     print("image downloaded")
 
@@ -54,7 +66,8 @@ def predict():
     if size == 0:
         # print("定規が検出されませんでした。")
         return {
-            "success" : 0
+            "success" : 0,
+            "msg" : "size 0"
         }
     else:
         horizontal = isHorizontal()
@@ -103,7 +116,8 @@ def predict():
 
     if type == "iiif":
         shp = resize(url, input_image_w, input_image_h)
-        result["full"] = shp
+        result["input_"] = result["input"]
+        result["input"] = shp
 
     return result
 
