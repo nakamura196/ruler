@@ -50,7 +50,15 @@ def predict():
         ln = spl[-4] + "/" + spl[-3] + "/" + spl[-2] + "/" + spl[-1]
         api = url.replace(ln, "")
         info = api + "info.json"
-        df = requests.get(info).json()
+
+        try:
+            df = requests.get(info).json()
+        except Exception as e:
+            return {
+                "success" : 0,
+                "msg" : str(e)
+            }
+        
         full_image_width = df["width"]
         full_image_height = df["height"]
 
@@ -144,8 +152,8 @@ def predict():
         # print("1ピクセルあたりのサイズ: {} mm".format(value))
         
         ratio = value["pixelPerMM"]
-        # ruler_w = int(value["width"] / ratio)
-        # ruler_h = int(value["height"] / ratio)
+        ruler_w = int(value["width"] / ratio)
+        ruler_h = int(value["height"] / ratio)
         input_image_w = int(org_w / ratio)
         input_image_h = int(org_h / ratio)
         '''
@@ -157,7 +165,8 @@ def predict():
     result = {
         "success" : 1,
         "pixelPerMM": value["pixelPerMM"],
-        "input": [input_image_w, input_image_h]
+        "ruler" : [ruler_w, ruler_h],
+        "image": [input_image_w, input_image_h]
     }
 
     '''
@@ -175,7 +184,11 @@ def predict():
 
     hs = hashlib.md5(base.encode()).hexdigest()
 
-    shutil.copy("output.jpg", "static/{}.jpg".format(hs))
+    static_path = "static/{}.jpg".format(hs)
+
+    os.makedirs(os.path.dirname(static_path), exist_ok=True)
+
+    shutil.copy("output.jpg", static_path)
 
     result["hash"] = hs
 
