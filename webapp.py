@@ -33,12 +33,6 @@ def predict():
     if request.method == "GET":
         url = request.args.get('url', '')
 
-    if url == "":
-        return {
-            "success" : 0,
-            "msg" : "url"
-        }
-
     type = request.args.get('type', 'url')
 
     filename = "tmp.jpg"
