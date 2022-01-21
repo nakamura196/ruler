@@ -23,3 +23,5 @@ flask_cors
 
 pylsd
 ocrd-fork-pylsd==0.0.3
+
+ipython

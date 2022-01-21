@@ -23,6 +23,10 @@ CORS(app)
 
 model = None
 
+@app.route('/')
+def index():
+   return 'Hello World!!!'
+
 @app.route("/predict", methods=["GET"])
 def predict():
     print("start")
@@ -125,7 +129,7 @@ def predict():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flask app exposing yolov5 models")
-    parser.add_argument("--port", default=5000, type=int, help="port number")
+    parser.add_argument("--port", default=80, type=int, help="port number")
     args = parser.parse_args()
 
     model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt') # .autoshape()  # force_reload = recache latest code

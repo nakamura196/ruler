@@ -1,6 +1,4 @@
 import numpy as np
-import keras.models
-import tensorflow as tf
 from PIL import Image
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -8,7 +6,6 @@ import torch
 from urllib import request
 import json
 import requests
-from tqdm import tqdm
 import os
 import warnings
 warnings.filterwarnings("ignore")
