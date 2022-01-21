@@ -18,7 +18,11 @@ import statistics
 import matplotlib.pyplot as plt
 
 
-def detect(model, r=1, type="url", api=None, show=True):
+def detect(model, r=1, type="url", api=None, partial=False, x0=0, y0=0, show=True):
+    '''
+    if partial:
+      r = 1
+    '''
 
     filename = "tmp.jpg"
 
@@ -42,8 +46,6 @@ def detect(model, r=1, type="url", api=None, show=True):
         r2 = image_size / ll
         resized = resized.resize((int(w * r2), int(h * r2)))
 
-    
-
     results = model(resized, size=yolo_input_size)
 
     data = results.pandas().xyxy[0].to_json(orient="records")
@@ -57,6 +59,8 @@ def detect(model, r=1, type="url", api=None, show=True):
 
     score_max = 0
 
+    xywh = None
+
     for i in range(len(data)):
         obj = data[i]
 
@@ -67,18 +71,25 @@ def detect(model, r=1, type="url", api=None, show=True):
 
         score_max = score
 
-        index = i + 1
+        # index = i + 1
+
+        # print("x0", x0, "y0", y0)
 
         x = int(obj["xmin"] * r / r2)
         y = int(obj["ymin"] * r / r2)
         w = int(obj["xmax"] * r / r2) - x
         h = int(obj["ymax"] * r / r2) - y
 
+        print("x0", x0, "y0", y0, "xywh", x, y, w, h)
+
+        x = x + x0
+        y = y + y0
+
         xywh = "{},{},{},{}".format(x, y, w, h)
 
         opath = "ruler.jpg"
 
-        if type == "iiif":
+        if type == "iiif": #  and not partial:
           u = api + xywh + "/full/0/default.jpg"
           print("u", u)
 
@@ -87,8 +98,7 @@ def detect(model, r=1, type="url", api=None, show=True):
               with open(opath, 'wb') as f:
                   f.write(r.content)
 
-        else:        
-
+        else:
           im_crop = img.crop((x, y, x + w, y + h))
           im_crop.save(opath, quality=95)
 

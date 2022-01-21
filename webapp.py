@@ -38,6 +38,13 @@ def predict():
 
     type = request.args.get('type', 'url')
 
+    partial = False
+
+    x0 = 0
+    y0 = 0
+    ratio = 1 # 入力画像のサイズとダウンロード画像のサイズ（1024）との比率
+    api = None
+
     if type == "iiif":
         spl = url.split("/")
         ln = spl[-4] + "/" + spl[-3] + "/" + spl[-2] + "/" + spl[-1]
@@ -47,17 +54,30 @@ def predict():
         full_image_width = df["width"]
         full_image_height = df["height"]
 
-        xywh = spl[-4]
+        base_xywh = spl[-4]
 
-        # url = ""
+        isWidthLarge = True
 
         bsize = 1024
 
-        url = api + xywh + "/" + ("{},".format(bsize) if full_image_width > full_image_height else ",{}".format(bsize)) + "/0/default.jpg"
-        ratio = full_image_width / bsize if full_image_width > full_image_height else full_image_height / bsize
-    else:
-        ratio = 1
+        if base_xywh != "full":
+            partial = True
 
+            base_spl = base_xywh.split(",")
+            x0 = int(base_spl[0])
+            y0 = int(base_spl[1])
+            base_w = int(base_spl[2])
+            base_h = int(base_spl[3])
+
+            if base_w < base_h:
+                isWidthLarge = False
+
+            ratio = base_w / bsize if isWidthLarge else base_h / bsize
+        else:
+            if full_image_width < full_image_height:
+                isWidthLarge = False
+            ratio = full_image_width / bsize if isWidthLarge else full_image_height / bsize
+        url = api + base_xywh + "/" + ("{},".format(bsize) if isWidthLarge else ",{}".format(bsize)) + "/0/default.jpg"
 
     filename = "tmp.jpg"
     # !wget -O $filename $url
@@ -85,38 +105,38 @@ def predict():
 
     showFlag = False
 
-    size, xywh = detect(model, ratio, type, api, showFlag)
+    size, xywh = detect(model, ratio, type, api, partial, x0, y0, showFlag)
 
     print("ruler detected")
 
     if size == 0:
         # print("定規が検出されませんでした。")
         return {
-            "success" : 0,
-            "msg" : "size 0"
+            "success" : 1,
+            "msg" : "No rulers detected."
         }
     else:
         horizontal = isHorizontal()
         otsu()
 
-        print("otsu ended")
+        # print("otsu ended")
 
         # 細線化
         skelton(showFlag)
 
-        print("skelton ended")
+        # print("skelton ended")
 
         # 直線の検出
         x, y = hlsd(horizontal, showFlag)
 
-        print("さいせんか ended")
+        # print("さいせんか ended")
 
         # 極大値の表示
         arg_r_max = arg_r(x, y, False)
         # check(x, horizontal, arg_r_max, showFlag)
         value = output(x, arg_r_max, horizontal)
 
-        print("base ended")
+        # print("base ended")
 
         if showFlag:
             from IPython.display import Image,display_jpeg
@@ -147,11 +167,21 @@ def predict():
         result["input"] = shp
     '''
 
+    partial = request.args.get('partial', '0')
+    if partial == "1":
+        shp = resize(url, input_image_w, input_image_h)
+        # result["input"] = result["input"]
+        result["full"] = shp
+
     hs = hashlib.md5(base.encode()).hexdigest()
 
     shutil.copy("output.jpg", "static/{}.jpg".format(hs))
 
     result["hash"] = hs
+
+    # result["r"] = ratio
+
+    result["xywh"] = xywh
 
     return result
 
