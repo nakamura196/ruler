@@ -17,6 +17,8 @@ import warnings
 from lib import detect, isHorizontal, otsu, skelton, hlsd, arg_r, check, output, resize
 warnings.simplefilter('ignore')
 import cv2
+import shutil
+import hashlib
 
 app = Flask(__name__)
 CORS(app)
@@ -31,15 +33,38 @@ def index():
 def predict():
     print("start")
     if request.method == "GET":
-        url = request.args.get('url', '')
+        base = request.args.get('url', '')
+        url = base
 
     type = request.args.get('type', 'url')
+
+    if type == "iiif":
+        spl = url.split("/")
+        ln = spl[-4] + "/" + spl[-3] + "/" + spl[-2] + "/" + spl[-1]
+        api = url.replace(ln, "")
+        info = api + "info.json"
+        df = requests.get(info).json()
+        full_image_width = df["width"]
+        full_image_height = df["height"]
+
+        xywh = spl[-4]
+
+        # url = ""
+
+        bsize = 1024
+
+        url = api + xywh + "/" + ("{},".format(bsize) if full_image_width > full_image_height else ",{}".format(bsize)) + "/0/default.jpg"
+        ratio = full_image_width / bsize if full_image_width > full_image_height else full_image_height / bsize
+    else:
+        ratio = 1
+
 
     filename = "tmp.jpg"
     # !wget -O $filename $url
     
     try:
         # 超シンプルな画像保存
+        print("url", url)
         r = requests.get(url)
         if r.status_code == 200:
             with open(filename, 'wb') as f:
@@ -55,9 +80,12 @@ def predict():
     org = cv2.imread("tmp.jpg")
     org_h, org_w, org_z = org.shape
 
+    org_h = org_h * ratio
+    org_w = org_w * ratio
+
     showFlag = False
 
-    size = detect(model, showFlag)
+    size, xywh = detect(model, ratio, type, api, showFlag)
 
     print("ruler detected")
 
@@ -112,10 +140,18 @@ def predict():
         "input": [input_image_w, input_image_h]
     }
 
+    '''
     if type == "iiif":
         shp = resize(url, input_image_w, input_image_h)
         result["input_"] = result["input"]
         result["input"] = shp
+    '''
+
+    hs = hashlib.md5(base.encode()).hexdigest()
+
+    shutil.copy("output.jpg", "static/{}.jpg".format(hs))
+
+    result["hash"] = hs
 
     return result
 

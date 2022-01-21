@@ -18,7 +18,7 @@ import statistics
 import matplotlib.pyplot as plt
 
 
-def detect(model, show=True):
+def detect(model, r=1, type="url", api=None, show=True):
 
     filename = "tmp.jpg"
 
@@ -53,7 +53,7 @@ def detect(model, show=True):
 
     # ダウンロードした画像がmaxを超える場合がある
     # r = max(c_width, c_height) / yolo_input_size
-    r = 1
+    # r = 1
 
     score_max = 0
 
@@ -78,14 +78,25 @@ def detect(model, show=True):
 
         opath = "ruler.jpg"
 
-        im_crop = img.crop((x, y, x + w, y + h))
-        im_crop.save(opath, quality=95)
+        if type == "iiif":
+          u = api + xywh + "/full/0/default.jpg"
+          print("u", u)
+
+          r = requests.get(u)
+          if r.status_code == 200:
+              with open(opath, 'wb') as f:
+                  f.write(r.content)
+
+        else:        
+
+          im_crop = img.crop((x, y, x + w, y + h))
+          im_crop.save(opath, quality=95)
 
         if show:
             from IPython.display import Image,display_jpeg
             display_jpeg(Image(opath))
 
-    return len(data)
+    return len(data), xywh
 
 # size = detect(True)
 
@@ -142,17 +153,13 @@ def skelton(show=False):
   if show:
     display_jpeg(Image(skeleton_path))
 
-# skelton(True)
-
 def hlsd(horizontal, show=False):
-  opath = "tmp.jpg"
+  opath = "ruler.jpg"
   img = cv2.imread(opath)
   gray = cv2.imread('skeleton.jpg', 0)
 
   w = img.shape[1] if horizontal else img.shape[0]
   h = img.shape[0] if horizontal else img.shape[1]
-
-  img4 = img.copy()
 
   lines = lsd(gray)
 
@@ -164,32 +171,18 @@ def hlsd(horizontal, show=False):
     y.append(0)
 
   for i in range(lines.shape[0]):
-    pt1 = (int(lines[i, 0]), int(lines[i, 1]))
-    pt2 = (int(lines[i, 2]), int(lines[i, 3]))
-
     if horizontal:
       dx = int((int(lines[i, 0]) +  int(lines[i, 2])) / 2)
       dy = int(lines[i, 3]) - int(lines[i, 1])
     else:
       dx = int((int(lines[i, 1]) +  int(lines[i, 3])) / 2)
       dy = int(lines[i, 2]) - int(lines[i, 0])
-
-    width = lines[i, 4]
-    cv2.line(img4, pt1, pt2, (0, 255, 0), int(np.ceil(width / 2)))
-
     y[dx] = dy  
-
-  cv2.imwrite('img4.jpg',img4)
-  if show:
-    from IPython.display import Image,display_jpeg
-    display_jpeg(Image('img4.jpg'))
 
   x = np.array(x)
   y = np.array(y)
 
   return x, y
-
-# x, y = hlsd(horizontal, True)
 
 def arg_r(x, y, show=False):
   
